@@ -1,0 +1,38 @@
+services:
+  frontend:
+    image: 891377389353.dkr.ecr.us-east-1.amazonaws.com/tienda-frontend:latest
+    container_name: tienda-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  backend:
+    image: 891377389353.dkr.ecr.us-east-1.amazonaws.com/tienda-backend:latest
+    container_name: tienda-backend
+    environment:
+      DB_HOST: db
+      DB_USER: root
+      DB_PASSWORD: admin123
+      DB_NAME: tienda_perritos
+      DB_PORT: 3306
+    ports:
+      - "3001:3001"
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: mysql:8
+    container_name: tienda-db
+    environment:
+      MYSQL_ROOT_PASSWORD: admin123
+      MYSQL_DATABASE: tienda_perritos
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    restart: unless-stopped
+
+volumes:
+  dbdata:
