@@ -7,14 +7,28 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  validate:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Deploy to EC2
+      - name: Validate production compose file
+        run: docker compose -f docker-compose.prod.yml config
+
+      - name: Build frontend image locally
+        run: docker build -t tienda-frontend:check ./frontend
+
+      - name: Build backend image locally
+        run: docker build -t tienda-backend:check ./backend
+
+  deploy:
+    needs: validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy stack to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -24,4 +38,22 @@ jobs:
             cd /home/ec2-user/tienda-perritos
             sudo docker compose up -d --build
             sudo docker compose ps
+
+  smoke-test:
+    needs: deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Verify stack and API on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            cd /home/ec2-user/tienda-perritos
+            sudo docker compose ps
+            sudo docker compose logs --tail=20
+            curl -fs http://localhost:3001/api/health
+            curl -fs http://localhost:3001/api/productos
 
