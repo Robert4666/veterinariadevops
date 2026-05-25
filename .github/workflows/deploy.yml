@@ -39,6 +39,9 @@ jobs:
             sudo systemctl start docker
             sudo docker compose up -d --build
             sudo docker compose ps
+            curl -fs http://localhost:3001/api/health
+            curl -fs http://localhost:8080
+            curl -fs http://localhost:8080/app.js | grep -q "3.88.12.5"
 
   smoke-test:
     needs: deploy
@@ -57,4 +60,6 @@ jobs:
             sudo docker compose logs --tail=20
             curl -fs http://localhost:3001/api/health
             curl -fs http://localhost:3001/api/productos
+            curl -fs http://localhost:8080
+            curl -fs http://localhost:8080/app.js | grep -q "3.88.12.5"
 
