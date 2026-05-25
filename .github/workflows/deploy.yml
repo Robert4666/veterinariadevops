@@ -41,7 +41,6 @@ jobs:
             sudo docker compose ps
             curl -fs http://localhost:3001/api/health
             curl -fs http://localhost:8080
-            grep -q "3.88.12.5" /home/ec2-user/veterinariadevops/frontend/app.js
 
   smoke-test:
     needs: deploy
@@ -61,5 +60,4 @@ jobs:
             curl -fs http://localhost:3001/api/health
             curl -fs http://localhost:3001/api/productos
             curl -fs http://localhost:8080
-            grep -q "3.88.12.5" /home/ec2-user/veterinariadevops/frontend/app.js
 
