@@ -3,7 +3,7 @@
  */
 
 // URL fija del backend en EC2 para la demostración
-const API_BASE = "http://100.48.79.90:3001/api/productos";
+const API_BASE = "http://54.162.175.78:3001/api/productos";
 
 let editandoId = null;
 
