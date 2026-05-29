@@ -3,7 +3,7 @@ services:
     image: 891377389353.dkr.ecr.us-east-1.amazonaws.com/tienda-frontend:latest
     container_name: tienda-frontend
     ports:
-      - "8080:80"
+      - "8080:8080"
     depends_on:
       - backend
     restart: unless-stopped

@@ -2,7 +2,7 @@ name: CI/CD Tienda Perritos - DB
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "deploy", "main" ]
     paths:
       - "db/**"
 
@@ -42,8 +42,9 @@ jobs:
               "set -e",
               "aws ecr get-login-password --region '${{ secrets.AWS_REGION }}' | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}",
               "docker pull ${{ secrets.ECR_REPO_URL_DB }}:latest",
+              "docker network create tienda-net || true",
               "docker stop tienda-db || true",
               "docker rm tienda-db || true",
-              "docker run -d --name tienda-db -p 3306:3306 -v dbdata:/var/lib/mysql ${{ secrets.ECR_REPO_URL_DB }}:latest"
+              "docker run -d --name tienda-db --network tienda-net -p 3306:3306 -v dbdata:/var/lib/mysql ${{ secrets.ECR_REPO_URL_DB }}:latest"
             ]}' \
             --output text

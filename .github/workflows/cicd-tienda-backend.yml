@@ -2,7 +2,7 @@ name: CI/CD Tienda Perritos - Backend
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "deploy", "main" ]
     paths:
       - "backend/**"
 
@@ -42,8 +42,9 @@ jobs:
               "set -e",
               "aws ecr get-login-password --region '${{ secrets.AWS_REGION }}' | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}",
               "docker pull ${{ secrets.ECR_REPO_URL_BACKEND }}:latest",
+              "docker network create tienda-net || true",
               "docker stop tienda-backend || true",
               "docker rm tienda-backend || true",
-              "docker run -d --name tienda-backend -p 3001:3001 ${{ secrets.ECR_REPO_URL_BACKEND }}:latest"
+              "docker run -d --name tienda-backend --network tienda-net -p 3001:3001 -e DB_HOST=tienda-db ${{ secrets.ECR_REPO_URL_BACKEND }}:latest"
             ]}' \
             --output text
