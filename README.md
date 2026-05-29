@@ -6,6 +6,16 @@ Aplicación de ejemplo en 3 capas usando Docker y Docker Compose:
 - Backend: Node.js + Express
 - Base de datos: MySQL
 
+## CI/CD
+
+El repositorio incluye workflows separados para:
+
+- Frontend
+- Backend
+- Base de datos
+
+La idea es construir la imagen de cada componente, publicarla en Amazon ECR y desplegarla en EC2 mediante AWS Systems Manager.
+
 ## Requisitos
 
 - Docker Desktop instalado
@@ -52,3 +62,4 @@ docker compose down
 
 - La base de datos se inicializa automáticamente con el script `db/init.sql` en el primer arranque.
 - Puedes modificar el frontend y backend, reconstruir y volver a levantar los contenedores.
+- Los Dockerfiles usan una estructura multi-stage o separada por etapas para mejorar limpieza y seguridad.

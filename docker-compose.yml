@@ -8,6 +8,8 @@ services:
       - "8080:80"
     depends_on:
       - backend
+    networks:
+      - tienda-net
 
   backend:
     build: ./backend
@@ -22,6 +24,8 @@ services:
       - "3001:3001"
     depends_on:
       - db
+    networks:
+      - tienda-net
 
   db:
     image: mysql:8
@@ -32,6 +36,11 @@ services:
     volumes:
       - dbdata:/var/lib/mysql
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - tienda-net
 
 volumes:
   dbdata:
+
+networks:
+  tienda-net:

@@ -7,6 +7,8 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
+    networks:
+      - tienda-net
 
   backend:
     image: 891377389353.dkr.ecr.us-east-1.amazonaws.com/tienda-backend:latest
@@ -22,6 +24,8 @@ services:
     depends_on:
       - db
     restart: unless-stopped
+    networks:
+      - tienda-net
 
   db:
     image: mysql:8
@@ -33,6 +37,11 @@ services:
       - dbdata:/var/lib/mysql
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     restart: unless-stopped
+    networks:
+      - tienda-net
 
 volumes:
   dbdata:
+
+networks:
+  tienda-net:
