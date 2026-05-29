@@ -45,6 +45,7 @@ jobs:
               "docker network create tienda-net || true",
               "docker stop tienda-db || true",
               "docker rm tienda-db || true",
-              "docker run -d --name tienda-db --network tienda-net -p 3306:3306 -v dbdata:/var/lib/mysql ${{ secrets.ECR_REPO_URL_DB }}:latest"
+              "docker run -d --name tienda-db --network tienda-net -p 3306:3306 -v dbdata:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=admin123 -e MYSQL_DATABASE=tienda_perritos ${{ secrets.ECR_REPO_URL_DB }}:latest",
+              "docker restart tienda-backend || true"
             ]}' \
             --output text
