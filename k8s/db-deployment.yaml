@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tienda-db
+  namespace: tienda
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tienda-db
+  template:
+    metadata:
+      labels:
+        app: tienda-db
+    spec:
+      containers:
+        - name: mysql
+          image: ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/tienda-db:eks-v1
+          ports:
+            - containerPort: 3306
+          envFrom:
+            - secretRef:
+                name: tienda-db-secret
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 768Mi

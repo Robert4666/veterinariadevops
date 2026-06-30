@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tienda-frontend
+  namespace: tienda
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tienda-frontend
+  template:
+    metadata:
+      labels:
+        app: tienda-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/tienda-frontend:eks-v1
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: nginx-conf
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+      volumes:
+        - name: nginx-conf
+          configMap:
+            name: tienda-frontend-nginx
