@@ -1,0 +1,88 @@
+name: CI/CD Tienda Perritos - EKS
+
+on:
+  push:
+    branches: [ "deploy", "main" ]
+    paths:
+      - "frontend/**"
+      - "backend/**"
+      - "db/**"
+      - "k8s/**"
+      - ".github/workflows/cicd-tienda-eks.yml"
+
+jobs:
+  build-push-deploy-eks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar credenciales AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login en Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build y push imágenes (frontend, backend, db)
+        env:
+          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+        run: |
+          set -e
+          docker build -t tienda-frontend ./frontend
+          docker tag tienda-frontend:latest "$ECR_REGISTRY/tienda-frontend:eks-v1"
+          docker tag tienda-frontend:latest "$ECR_REGISTRY/tienda-frontend:latest"
+          docker push "$ECR_REGISTRY/tienda-frontend:eks-v1"
+          docker push "$ECR_REGISTRY/tienda-frontend:latest"
+
+          docker build -t tienda-backend ./backend
+          docker tag tienda-backend:latest "$ECR_REGISTRY/tienda-backend:eks-v1"
+          docker tag tienda-backend:latest "$ECR_REGISTRY/tienda-backend:latest"
+          docker push "$ECR_REGISTRY/tienda-backend:eks-v1"
+          docker push "$ECR_REGISTRY/tienda-backend:latest"
+
+          docker build -t tienda-db ./db
+          docker tag tienda-db:latest "$ECR_REGISTRY/tienda-db:eks-v1"
+          docker tag tienda-db:latest "$ECR_REGISTRY/tienda-db:latest"
+          docker push "$ECR_REGISTRY/tienda-db:eks-v1"
+          docker push "$ECR_REGISTRY/tienda-db:latest"
+
+      - name: Instalar kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Deploy en EKS
+        env:
+          EKS_CLUSTER: ${{ secrets.EKS_CLUSTER_NAME }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+        run: |
+          set -e
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          aws eks update-kubeconfig --name "$EKS_CLUSTER" --region "$AWS_REGION"
+
+          mkdir -p /tmp/k8s-ready
+          for f in k8s/*.yaml; do
+            sed "s/ACCOUNT_ID/${ACCOUNT_ID}/g" "$f" > "/tmp/k8s-ready/$(basename "$f")"
+          done
+
+          kubectl apply -f /tmp/k8s-ready/namespace.yaml
+          kubectl apply -f /tmp/k8s-ready/db-secret.yaml
+          kubectl apply -f /tmp/k8s-ready/db-deployment.yaml
+          kubectl apply -f /tmp/k8s-ready/db-service.yaml
+          kubectl apply -f /tmp/k8s-ready/backend-deployment.yaml
+          kubectl apply -f /tmp/k8s-ready/backend-service.yaml
+          kubectl apply -f /tmp/k8s-ready/frontend-nginx-configmap.yaml
+          kubectl apply -f /tmp/k8s-ready/frontend-deployment.yaml
+          kubectl apply -f /tmp/k8s-ready/frontend-service.yaml
+          kubectl apply -f /tmp/k8s-ready/hpa-backend.yaml
+          kubectl apply -f /tmp/k8s-ready/hpa-frontend.yaml
+
+          kubectl rollout status deployment/tienda-db -n tienda --timeout=300s || true
+          kubectl rollout status deployment/tienda-backend -n tienda --timeout=300s || true
+          kubectl rollout status deployment/tienda-frontend -n tienda --timeout=300s || true
+          kubectl get pods,svc,hpa -n tienda
