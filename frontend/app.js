@@ -2,8 +2,8 @@
  * Frontend simple para CRUD de productos de la tienda de perritos.
  */
 
-// URL fija del backend en EC2 para la demostración
-const API_BASE = "http://54.162.175.78:3001/api/productos";
+// En EKS usa proxy nginx (/api). En EC2 local cambia si hace falta en index.html.
+const API_BASE = "/api/productos";
 
 let editandoId = null;
 
